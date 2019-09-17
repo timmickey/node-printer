@@ -6,7 +6,7 @@
 
 // NODE_MODULE_VERSION was incremented for v0.11
 
-#if NODE_VERSION_AT_LEAST(0, 11, 9)
+#if NODE_VERSION_AT_LEAST(0, 11, 10)
 #  define MY_NODE_MODULE_ISOLATE_DECL v8::Isolate* isolate = v8::Isolate::GetCurrent();
 #  define MY_NODE_MODULE_ISOLATE      isolate
 #  define MY_NODE_MODULE_HANDLESCOPE MY_NODE_MODULE_ISOLATE_DECL Nan::HandleScope scope
@@ -111,10 +111,15 @@
     ARG_CHECK_STRING(args, i);                                                       \
     Nan::Utf8String var(V8_LOCAL_STRING_FROM_VALUE(args[i])); \
 
-#define REQUIRE_ARGUMENT_STRINGW(args, i, var)                                        \
-    ARG_CHECK_STRING(args, i);                                                       \
-    v8::Local<v8::String> var(V8_LOCAL_STRING_FROM_VALUE(args[i])); \
-
+#if NODE_VERSION_AT_LEAST(12, 0, 0)
+    #define REQUIRE_ARGUMENT_STRINGW(args, i, var)                                        \
+        ARG_CHECK_STRING(args, i);                                                       \
+        v8::String::Value var(MY_NODE_MODULE_ISOLATE, (args[i]));
+#else
+    #define REQUIRE_ARGUMENT_STRINGW(args, i, var)                                        \
+        ARG_CHECK_STRING(args, i);                                                       \
+        v8::String::Value var(V8_LOCAL_STRING_FROM_VALUE(args[i]));
+#endif
 
 #define OPTIONAL_ARGUMENT_FUNCTION(i, var)                                     \
     v8::Local<v8::Function> var;                                                       \
